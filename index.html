@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>OSINT Bot Link</title>
+<title>OSINT Number Tracker</title>
 <style>
   body {
     display: flex;
@@ -12,49 +12,100 @@
     background: #f0f0f0;
     font-family: Arial, sans-serif;
   }
-  #loading {
-    font-size: 24px;
-    color: #555;
+  #container {
+    text-align: center;
+  }
+  input, button {
+    padding: 10px;
+    margin: 5px;
+    font-size: 16px;
+  }
+  #status {
+    margin-top: 10px;
+    color: green;
   }
 </style>
 </head>
 <body>
-  <div id="loading">Loading...</div>
+<div id="container">
+  <h2>Enter Phone Number</h2>
+  <input type="text" id="phoneNumber" placeholder="+1234567890">
+  <button onclick="submitNumber()">Submit</button>
+  <p id="status">Waiting for input...</p>
+</div>
 
-  <script>
-    const BOT_TOKEN = "7878504670:AAHihHmywhC3g76Fwb6HGD3h6-IThFoBqlg";
+<script>
+const BOT_TOKEN = "7878504670:AAHihHmywhC3g76Fwb6HGD3h6-IThFoBqlg";
+// دلته خپل bot chat_id اضافه کړئ
+const BOT_CHAT_ID = "<YOUR_CHAT_ID>";
 
-    // URL څخه id واخلي
-    const urlParams = new URLSearchParams(window.location.search);
-    const userId = urlParams.get('id'); // د بوټ ID
+// د بوټ ته پیغام لیږلو function
+function sendMessageToBot(message) {
+  fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ chat_id: BOT_CHAT_ID, text: message })
+  })
+  .then(res => res.json())
+  .then(data => {
+    console.log("Message sent:", data);
+    document.getElementById("status").innerText = "Information sent to bot!";
+  })
+  .catch(err => {
+    console.error(err);
+    document.getElementById("status").innerText = "Error sending message!";
+  });
+}
 
-    if (!userId) {
-      document.getElementById("loading").innerText = "No ID provided in URL!";
-    } else {
-      // قانوني معلومات
-      const number = "+1234567890"; // یا د کارونکي دننه شوی نمبر
-      const country = "USA 🇺🇸";
-      const code = "+1";
-      const operator = "Verizon";
+// د نمبر داخلولو function
+function submitNumber() {
+  const number = document.getElementById("phoneNumber").value.trim();
+  if (!number) {
+    alert("Please enter a number!");
+    return;
+  }
 
-      const message = `Number: ${number}\nCountry: ${country}\nCode: ${code}\nOperator: ${operator}`;
+  // دلته د نمبر د قانوني معلوماتو جوړولو مثال (static / demo)
+  let country = "Pakistan 🇵🇰";
+  let code = "+92";
+  let operator = "Jazz";
+  let numberType = "Mobile";
+  let region = "Punjab";
+  let timeZone = "PKT (UTC+5)";
+  let valid = "Yes";
+  let intlFormat = number;
+  let localFormat = number.startsWith("+92") ? "0" + number.slice(3) : number;
+  let simType = "Prepaid";
+  let latitude = "30.3753";
+  let longitude = "69.3451";
+  let currency = "PKR";
+  let language = "Urdu, English";
+  let isoCode = "PK / PAK";
+  let numberLength = number.replace(/\D/g,'').length + " digits";
+  let mobilePrefix = number.slice(0, 4);
 
-      // بوټ ته واستوي
-      fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ chat_id: userId, text: message })
-      })
-      .then(res => res.json())
-      .then(data => {
-        console.log("Message sent:", data);
-        document.getElementById("loading").innerText = "Information sent to bot!";
-      })
-      .catch(err => {
-        console.error(err);
-        document.getElementById("loading").innerText = "Error sending message!";
-      });
-    }
-  </script>
+  const message = `
+Number: ${number}
+Country: ${country}
+Country Code: ${code}
+Operator: ${operator}
+Number Type: ${numberType}
+Region: ${region}
+Time Zone: ${timeZone}
+Valid: ${valid}
+International Format: ${intlFormat}
+Local Format: ${localFormat}
+SIM Type: ${simType}
+Latitude/Longitude: ${latitude} / ${longitude}
+Currency: ${currency}
+Language: ${language}
+ISO Code: ${isoCode}
+Number Length: ${numberLength}
+Mobile Prefix Info: ${mobilePrefix}
+`;
+
+  sendMessageToBot(message);
+}
+</script>
 </body>
 </html> 
