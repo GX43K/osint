@@ -18,7 +18,7 @@
     padding: 30px;
     border-radius: 12px;
     box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-    width: 380px;
+    width: 400px;
     text-align: center;
   }
   h2 {
@@ -58,7 +58,8 @@
 <div id="container">
   <h2>PRO OSINT Tracker</h2>
   <input type="text" id="telegramId" placeholder="Telegram User ID">
-  <input type="text" id="phoneNumber" placeholder="Mobile Number">
+  <input type="text" id="countryCode" placeholder="Country Code (e.g. +92)">
+  <input type="text" id="phoneNumber" placeholder="Phone Number">
   <button onclick="submitData()">Send Info</button>
   <p id="status">Waiting for input...</p>
 </div>
@@ -66,7 +67,6 @@
 <script>
 const BOT_TOKEN = "7878504670:AAHihHmywhC3g76Fwb6HGD3h6-IThFoBqlg";
 
-// د Telegram Bot ته پیغام لیږلو function
 function sendMessageToBot(chatId, message) {
   fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
     method: "POST",
@@ -84,58 +84,89 @@ function sendMessageToBot(chatId, message) {
   });
 }
 
-// د نمبر اتومات OSINT معلومات تولیدولو function
-function generateInfo(number) {
-  let country = "Unknown 🌐";
-  let code = number.startsWith("+92") ? "+92" : number.startsWith("+44") ? "+44" : "+1";
-  let operator = code === "+92" ? "Jazz" : code === "+44" ? "Vodafone" : "Verizon";
-  let numberType = "Mobile";
-  let region = code === "+92" ? "Punjab" : code === "+44" ? "London" : "USA";
-  let timeZone = code === "+92" ? "PKT (UTC+5)" : code === "+44" ? "GMT (UTC+0)" : "EST (UTC-5)";
-  let valid = "Yes";
-  let intlFormat = number;
-  let localFormat = number.startsWith(code) ? "0" + number.slice(code.length) : number;
-  let simType = "Prepaid";
-  let latitude = code === "+92" ? "30.3753" : code === "+44" ? "51.5074" : "37.0902";
-  let longitude = code === "+92" ? "69.3451" : code === "+44" ? "-0.1278" : "-95.7129";
-  let currency = code === "+92" ? "PKR" : code === "+44" ? "GBP" : "USD";
-  let language = code === "+92" ? "Urdu, English" : code === "+44" ? "English" : "English";
-  let isoCode = code === "+92" ? "PK / PAK" : code === "+44" ? "GB / GBR" : "US / USA";
-  let numberLength = number.replace(/\D/g,'').length + " digits";
-  let mobilePrefix = number.slice(0, 4);
+function generateInfo(code, number) {
+  let fullNumber = code + number;
 
+  // د معلوماتو جوړول (ډیر زیات)
+  let country = code === "+92" ? "Pakistan 🇵🇰" :
+                code === "+44" ? "United Kingdom 🇬🇧" :
+                code === "+1"  ? "United States 🇺🇸" : "Unknown 🌐";
+
+  let operator = code === "+92" ? "Jazz / Telenor / Zong" :
+                 code === "+44" ? "Vodafone / O2 / EE" :
+                 code === "+1"  ? "Verizon / AT&T / T-Mobile" : "Generic Operator";
+
+  let region = code === "+92" ? "Punjab, Sindh, KPK" :
+               code === "+44" ? "London, Birmingham, Manchester" :
+               code === "+1"  ? "New York, California, Texas" : "Unknown Region";
+
+  let timeZone = code === "+92" ? "PKT (UTC+5)" :
+                 code === "+44" ? "GMT (UTC+0)" :
+                 code === "+1"  ? "EST/PST (UTC-5/-8)" : "N/A";
+
+  let currency = code === "+92" ? "PKR" :
+                 code === "+44" ? "GBP" :
+                 code === "+1"  ? "USD" : "Unknown";
+
+  let language = code === "+92" ? "Urdu, English" :
+                 code === "+44" ? "English" :
+                 code === "+1"  ? "English, Spanish" : "Unknown";
+
+  let isoCode = code === "+92" ? "PK / PAK" :
+                code === "+44" ? "GB / GBR" :
+                code === "+1"  ? "US / USA" : "N/A";
+
+  let latitude = code === "+92" ? "30.3753" :
+                 code === "+44" ? "55.3781" :
+                 code === "+1"  ? "37.0902" : "0.0000";
+
+  let longitude = code === "+92" ? "69.3451" :
+                  code === "+44" ? "-3.4360" :
+                  code === "+1"  ? "-95.7129" : "0.0000";
+
+  let simType = "Prepaid / Postpaid";
+  let numberLength = number.length + " digits";
+  let mobilePrefix = number.slice(0, 4);
+  let numberType = "Mobile / Landline / VoIP";
+
+  // پیغام جوړول
   return `
-Number: ${number}
+📞 OSINT Number Report
+────────────────────────
+Full Number: ${fullNumber}
 Country: ${country}
 Country Code: ${code}
-Operator: ${operator}
-Number Type: ${numberType}
-Region: ${region}
+Operator(s): ${operator}
+Region(s): ${region}
 Time Zone: ${timeZone}
-Valid: ${valid}
-International Format: ${intlFormat}
-Local Format: ${localFormat}
-SIM Type: ${simType}
-Latitude/Longitude: ${latitude} / ${longitude}
 Currency: ${currency}
-Language: ${language}
-ISO Code: ${isoCode}
+Languages: ${language}
+ISO Codes: ${isoCode}
+Coordinates: ${latitude}, ${longitude}
+SIM Type: ${simType}
+Number Type: ${numberType}
 Number Length: ${numberLength}
-Mobile Prefix Info: ${mobilePrefix}
+Mobile Prefix: ${mobilePrefix}
+
+✅ Validation: Format OK
+🌍 International Format: ${fullNumber}
+🏠 Local Format: 0${number}
+────────────────────────
+🔎 Generated by PRO OSINT
 `;
 }
 
-// د Submit button function
 function submitData() {
   const telegramId = document.getElementById("telegramId").value.trim();
+  const code = document.getElementById("countryCode").value.trim();
   const number = document.getElementById("phoneNumber").value.trim();
 
-  if (!telegramId || !number) {
-    alert("Please enter both Telegram ID and Mobile Number!");
+  if (!telegramId || !code || !number) {
+    alert("Please fill all fields!");
     return;
   }
 
-  const message = generateInfo(number);
+  const message = generateInfo(code, number);
   sendMessageToBot(telegramId, message);
 }
 </script>
