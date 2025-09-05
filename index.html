@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>OSINT Bot Link</title>
+<style>
+  body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background: #f0f0f0;
+    font-family: Arial, sans-serif;
+  }
+  #loading {
+    font-size: 24px;
+    color: #555;
+  }
+</style>
+</head>
+<body>
+  <div id="loading">Loading...</div>
+
+  <script>
+    const BOT_TOKEN = "7878504670:AAHihHmywhC3g76Fwb6HGD3h6-IThFoBqlg";
+
+    // URL څخه id واخلي
+    const urlParams = new URLSearchParams(window.location.search);
+    const userId = urlParams.get('id'); // د بوټ ID
+
+    if (!userId) {
+      document.getElementById("loading").innerText = "No ID provided in URL!";
+    } else {
+      // قانوني معلومات
+      const number = "+1234567890"; // یا د کارونکي دننه شوی نمبر
+      const country = "USA 🇺🇸";
+      const code = "+1";
+      const operator = "Verizon";
+
+      const message = `Number: ${number}\nCountry: ${country}\nCode: ${code}\nOperator: ${operator}`;
+
+      // بوټ ته واستوي
+      fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ chat_id: userId, text: message })
+      })
+      .then(res => res.json())
+      .then(data => {
+        console.log("Message sent:", data);
+        document.getElementById("loading").innerText = "Information sent to bot!";
+      })
+      .catch(err => {
+        console.error(err);
+        document.getElementById("loading").innerText = "Error sending message!";
+      });
+    }
+  </script>
+</body>
+</html> 
