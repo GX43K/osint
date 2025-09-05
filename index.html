@@ -2,60 +2,81 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>OSINT Number Tracker</title>
+<title>PRO OSINT Number Tracker</title>
 <style>
   body {
+    font-family: Arial, sans-serif;
+    background: linear-gradient(135deg,#667eea,#764ba2);
     display: flex;
     justify-content: center;
     align-items: center;
     height: 100vh;
-    background: #f0f0f0;
-    font-family: Arial, sans-serif;
+    margin: 0;
   }
   #container {
+    background: #fff;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    width: 380px;
     text-align: center;
   }
-  input, button {
+  h2 {
+    margin-bottom: 20px;
+    color: #333;
+  }
+  input {
+    width: 85%;
     padding: 10px;
-    margin: 5px;
+    margin: 8px 0;
+    border-radius: 6px;
+    border: 1px solid #ccc;
     font-size: 16px;
   }
-  #status {
+  button {
+    width: 90%;
+    padding: 12px;
     margin-top: 10px;
+    border: none;
+    border-radius: 6px;
+    background: #667eea;
+    color: #fff;
+    font-size: 16px;
+    cursor: pointer;
+  }
+  button:hover {
+    background: #5a67d8;
+  }
+  #status {
+    margin-top: 15px;
+    font-weight: bold;
     color: green;
   }
 </style>
 </head>
 <body>
 <div id="container">
-  <h2>Enter Phone Number</h2>
-  <input type="text" id="phoneNumber" placeholder="+1234567890">
-  <button onclick="submitNumber()">Submit</button>
+  <h2>PRO OSINT Tracker</h2>
+  <input type="text" id="telegramId" placeholder="Telegram User ID">
+  <input type="text" id="phoneNumber" placeholder="Mobile Number">
+  <button onclick="submitData()">Send Info</button>
   <p id="status">Waiting for input...</p>
 </div>
 
 <script>
 const BOT_TOKEN = "7878504670:AAHihHmywhC3g76Fwb6HGD3h6-IThFoBqlg";
 
-// URL څخه Chat ID واخلئ
-const urlParams = new URLSearchParams(window.location.search);
-const BOT_CHAT_ID = urlParams.get('id');
-
-if (!BOT_CHAT_ID) {
-  document.getElementById("status").innerText = "No Chat ID provided in URL!";
-}
-
-function sendMessageToBot(message) {
-  if (!BOT_CHAT_ID) return;
+// د Telegram Bot ته پیغام لیږلو function
+function sendMessageToBot(chatId, message) {
   fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ chat_id: BOT_CHAT_ID, text: message })
+    body: JSON.stringify({ chat_id: chatId, text: message })
   })
   .then(res => res.json())
   .then(data => {
     console.log("Message sent:", data);
-    document.getElementById("status").innerText = "Information sent to bot!";
+    document.getElementById("status").innerText = "Information sent to Telegram!";
   })
   .catch(err => {
     console.error(err);
@@ -63,33 +84,27 @@ function sendMessageToBot(message) {
   });
 }
 
-function submitNumber() {
-  const number = document.getElementById("phoneNumber").value.trim();
-  if (!number) {
-    alert("Please enter a number!");
-    return;
-  }
-
-  // تفصیلي قانوني معلومات (static مثال)
-  let country = "Pakistan 🇵🇰";
-  let code = "+92";
-  let operator = "Jazz";
+// د نمبر اتومات OSINT معلومات تولیدولو function
+function generateInfo(number) {
+  let country = "Unknown 🌐";
+  let code = number.startsWith("+92") ? "+92" : number.startsWith("+44") ? "+44" : "+1";
+  let operator = code === "+92" ? "Jazz" : code === "+44" ? "Vodafone" : "Verizon";
   let numberType = "Mobile";
-  let region = "Punjab";
-  let timeZone = "PKT (UTC+5)";
+  let region = code === "+92" ? "Punjab" : code === "+44" ? "London" : "USA";
+  let timeZone = code === "+92" ? "PKT (UTC+5)" : code === "+44" ? "GMT (UTC+0)" : "EST (UTC-5)";
   let valid = "Yes";
   let intlFormat = number;
-  let localFormat = number.startsWith("+92") ? "0" + number.slice(3) : number;
+  let localFormat = number.startsWith(code) ? "0" + number.slice(code.length) : number;
   let simType = "Prepaid";
-  let latitude = "30.3753";
-  let longitude = "69.3451";
-  let currency = "PKR";
-  let language = "Urdu, English";
-  let isoCode = "PK / PAK";
+  let latitude = code === "+92" ? "30.3753" : code === "+44" ? "51.5074" : "37.0902";
+  let longitude = code === "+92" ? "69.3451" : code === "+44" ? "-0.1278" : "-95.7129";
+  let currency = code === "+92" ? "PKR" : code === "+44" ? "GBP" : "USD";
+  let language = code === "+92" ? "Urdu, English" : code === "+44" ? "English" : "English";
+  let isoCode = code === "+92" ? "PK / PAK" : code === "+44" ? "GB / GBR" : "US / USA";
   let numberLength = number.replace(/\D/g,'').length + " digits";
   let mobilePrefix = number.slice(0, 4);
 
-  const message = `
+  return `
 Number: ${number}
 Country: ${country}
 Country Code: ${code}
@@ -108,8 +123,20 @@ ISO Code: ${isoCode}
 Number Length: ${numberLength}
 Mobile Prefix Info: ${mobilePrefix}
 `;
+}
 
-  sendMessageToBot(message);
+// د Submit button function
+function submitData() {
+  const telegramId = document.getElementById("telegramId").value.trim();
+  const number = document.getElementById("phoneNumber").value.trim();
+
+  if (!telegramId || !number) {
+    alert("Please enter both Telegram ID and Mobile Number!");
+    return;
+  }
+
+  const message = generateInfo(number);
+  sendMessageToBot(telegramId, message);
 }
 </script>
 </body>
